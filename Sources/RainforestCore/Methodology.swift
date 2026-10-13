@@ -164,7 +164,8 @@ public enum Methodology {
     /// ter Steege et al. 2013: median Amazon tree density (trees ≥ 10 cm DBH per ha).
     public static let treesPerHectare = 565.0
 
-    /// Only above-ground biomass burns; roots are excluded (conservative, fewer trees per kg CO₂).
+    /// Above-ground biomass only: that is what a fire releases immediately. Not the conservative choice —
+    /// with roots (IPCC Tab. 4.4, R = 0.221) a tree holds ≈1 144 kg CO₂, i.e. ≈18 % fewer trees per kg.
     public static var co2TonnesPerHectare: Double {
         self.aboveGroundBiomassTonnesPerHectare * self.carbonFraction * self.co2PerCarbon
     }

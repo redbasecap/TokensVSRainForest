@@ -51,8 +51,9 @@ struct SourcesView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     self.stepTitle(5, "Nicht enthalten")
                     Text("Training der Modelle, Herstellung der Hardware (Scope 3), Wasserverbrauch, Netzwerk und "
-                        + "dein eigener Rechner. Für neuere Modelle (Claude 4.x, GPT-5) gibt es keine öffentlichen "
-                        + "Messwerte pro Token, deshalb werden die Werte von Claude 3.7 Sonnet bzw. GPT-4o verwendet.")
+                        + "dein eigener Rechner. Für neuere Modelle (Claude 4/5, GPT-5) gibt es keine öffentlichen "
+                        + "Messwerte pro Token, deshalb werden die Werte von Claude 3.7 Sonnet bzw. GPT-4o verwendet. "
+                        + "Der Fit deckt nur Inputs bis 10 000 Tokens ab; längere Kontexte werden linear verlängert.")
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -92,7 +93,9 @@ struct SourcesView: View {
         × Kohlenstoffanteil \(Methodology.carbonFraction) (IPCC 2006, Tab. 4.3) × 44/12 (C → CO₂) \
         = \(String(format: "%.0f", Methodology.co2TonnesPerHectare)) t CO₂/ha \
         = \(String(format: "%.1f", Methodology.co2KgPerSquareMeter)) kg CO₂ pro m². \
-        Wurzeln sind nicht eingerechnet, weil sie beim Brand nicht verbrennen.
+        Nur oberirdische Biomasse, denn sie wird bei einem Brand sofort freigesetzt. Das ist nicht die \
+        vorsichtige Wahl: Mit Wurzeln (IPCC Tab. 4.4, R = 0,221) speichert ein Baum ≈ 1 144 kg CO₂, \
+        also etwa 18 % weniger Bäume.
 
         Bei \(Int(Methodology.treesPerHectare)) Bäumen/ha (ter Steege et al. 2013, Bäume ≥ 10 cm Stammdurchmesser) \
         speichert ein Baum im Schnitt ≈ \(String(format: "%.0f", Methodology.co2KgPerTree)) kg CO₂. \

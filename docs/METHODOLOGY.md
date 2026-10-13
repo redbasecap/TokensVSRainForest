@@ -52,10 +52,12 @@ Plausibilitätsprüfung:
 
 Grenzen:
 
-* Für Claude 4.x, GPT-5 oder neuere Modelle gibt es keine öffentlichen Werte pro Token. Deshalb werden die
+* Für Claude 4/5, GPT-5 oder neuere Modelle gibt es keine öffentlichen Werte pro Token. Deshalb werden die
   Werte von Sonnet 3.7 bzw. GPT-4o verwendet.
 * Größere Modelle (z. B. Opus) brauchen vermutlich mehr Strom. Das ist bewusst nicht mit einem erfundenen
   Faktor hochskaliert.
+* Der Fit deckt nur Inputs bis 10 000 Tokens ab. In Claude Code liegen oft 100 000–200 000 Tokens (meist aus dem
+  Cache) im Kontext. Der Input-Koeffizient wird dort also linear weit über die Messdaten hinaus verlängert.
 
 ## 3. CO₂ pro kWh
 
@@ -77,10 +79,11 @@ Die Energiewerte enthalten den PUE bereits. Er wird deshalb nicht noch einmal au
 | Bäume pro Hektar (≥ 10 cm Stammdurchmesser) | 565 (Median) | [ter Steege et al. 2013, Science 342](https://doi.org/10.1126/science.1243092) |
 | **= CO₂ pro Baum** | **≈ 937 kg** | |
 
-Die Wurzelbiomasse (IPCC Tab. 4.4: R = 0,221) ist bewusst **nicht** eingerechnet:
+Die Wurzelbiomasse (IPCC Tab. 4.4: R = 0,221) ist **nicht** eingerechnet:
 
-* Beim Brand verbrennt die oberirdische Biomasse.
-* Ohne Wurzeln braucht es mehr CO₂ pro Baum. Die Darstellung wird dadurch eher kleiner als größer.
+* Bei einem Brand wird sofort vor allem die oberirdische Biomasse freigesetzt. Das passt zum Bild „verbrannt“.
+* Das ist **nicht** die vorsichtige Wahl. Mit Wurzeln speichert ein Baum ≈ 1 144 kg CO₂
+  (307,1 × 1,221 × 0,47 × 44/12 ÷ 565). Damit ergeben sich etwa 18 % weniger Bäume pro kg CO₂.
 
 ## 5. Pixel-Einheiten
 
