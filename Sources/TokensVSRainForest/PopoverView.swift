@@ -49,6 +49,7 @@ struct PopoverView: View {
             self.headline(impact)
             self.stats(impact)
             self.providerRows
+            self.giveBack
             Divider()
             self.footer
         }
@@ -135,6 +136,23 @@ struct PopoverView: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
+    }
+
+    private var giveBack: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("🌱")
+            VStack(alignment: .leading, spacing: 2) {
+                Link("Gib der Erde etwas zurück: Planet Wild", destination: GiveBack.planetWild)
+                    .font(.callout.weight(.semibold))
+                Text("Ich spende dort jeden Monat für Rewilding-Projekte (Empfehlungslink).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private var footer: some View {

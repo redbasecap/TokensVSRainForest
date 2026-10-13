@@ -97,6 +97,18 @@ button[aria-pressed="true"] { background: var(--fire); color: var(--night); bord
 .num span { color: var(--muted); font-size: 0.85rem; }
 .num b { font-family: var(--font-body); font-weight: 800; font-size: 1.35rem; font-variant-numeric: tabular-nums; color: var(--ink); }
 
+.giveback {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+  background: var(--moss); border: 3px solid #2d5640; border-radius: 6px; padding: 14px 16px;
+}
+.giveback .sprout { width: 48px; height: 48px; image-rendering: pixelated; }
+.giveback p { color: var(--sap); }
+.giveback a.cta {
+  font-family: var(--font-display); text-decoration: none; color: var(--night); background: var(--leaf);
+  border: 2px solid #3c8c43; border-bottom-width: 4px; border-radius: 4px; padding: 8px 14px; white-space: nowrap;
+}
+.giveback a.cta:hover { background: #6acd58; }
+@media (max-width: 620px) { .giveback { grid-template-columns: auto 1fr; } .giveback a.cta { grid-column: 1 / -1; text-align: center; } }
 .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 28px; }
 .two > section { display: grid; gap: 12px; align-content: start; min-width: 0; }
 .chain { margin: 0; padding-left: 1.3rem; display: grid; gap: 8px; color: var(--sap); }
@@ -179,6 +191,17 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 2px solid var(--mo
     <div class="num"><span>Fußballfelder Regenwald pro Tag</span><b id="nFields">–</b></div>
     <div class="num"><span>im Vergleich zur echten Abholzung (PRODES 2024)</span><b id="nProdes">–</b></div>
   </div>
+
+  <aside class="giveback" aria-labelledby="givebackTitle">
+    <canvas class="sprout" id="sprout" width="12" height="12" aria-hidden="true"></canvas>
+    <div>
+      <h3 id="givebackTitle">Gib der Erde etwas zurück</h3>
+      <p>Ich spende jeden Monat an Planet Wild. Die Community finanziert damit Naturschutz- und Rewilding-Projekte.
+        Das macht verbrauchten Strom nicht rückgängig, hilft Wäldern aber ganz real. Vielleicht magst du mitmachen.</p>
+    </div>
+    <a class="cta" href="https://planetwild.com/?code=RRRH33" target="_blank" rel="noopener">Planet Wild 🌱</a>
+  </aside>
+  <p class="note">Hinweis: Der Planet-Wild-Link ist ein Empfehlungslink.</p>
 
   <div class="two">
     <section>
@@ -366,7 +389,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 2px solid var(--mo
   }
 
   function drawMap(t, f) {
-    const front = 0.012;
+    const front = f >= 1 ? 0 : 0.012; // once everything is gone, the fire front is out too
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (kind[y * W + x] === 2) {
       px(x, y, (Math.floor(t * 2 + x * 0.3) % 5 === 0) ? "#8fd3ff" : "#4fb3ff");
     }
@@ -433,6 +456,15 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 2px solid var(--mo
     else { m(6, 8, 4, 1, "#111"); m(6, 7, 1, 1, "#111"); m(9, 7, 1, 1, "#111"); m(5, 6, 1, 3, "#7fd3ff"); m(10, 6, 1, 3, "#7fd3ff"); }
     if (f > 0 && !burnt) { const k = Math.floor(t * 10) % 4; m(12, 0, 2, 2, flames[k]); m(13, 2, 1, 1, flames[(k + 1) % 4]); }
   }
+
+  // Little pixel sprout for the give-back card.
+  (() => {
+    const g = $("sprout").getContext("2d");
+    const p = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    p(1, 10, 10, 2, "#8b5a2b"); p(5, 5, 2, 5, "#3fa34d");
+    p(2, 3, 3, 2, "#57c25f"); p(1, 2, 2, 1, "#57c25f"); p(7, 2, 3, 2, "#57c25f"); p(9, 1, 2, 1, "#57c25f");
+    p(4, 4, 1, 1, "#3fa34d"); p(7, 3, 1, 1, "#3fa34d");
+  })();
 
   // ---------- UI ----------
   function peopleFromSlider() { return Math.round(Math.pow(10, Number($("people").value))); }
@@ -506,8 +538,13 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 2px solid var(--mo
   });
 
   // ---------- Loop ----------
+  // Export mode for README GIFs: ?still=<0..1 of the timeline>&t=<seconds> renders one fixed frame.
+  const params = new URLSearchParams(location.search);
+  const still = params.has("still") ? Number(params.get("still")) : null;
+  const stillT = Number(params.get("t") || 0);
+
   function frame(ts) {
-    const t = ts / 1000;
+    const t = still !== null ? stillT : ts / 1000;
     const dt = state.lastTs ? Math.min(0.1, t - state.lastTs) : 0;
     state.lastTs = t;
     if (state.playing) {
@@ -527,8 +564,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 2px solid var(--mo
   state.people = 8.2e9;
   $("people").value = String(Math.log10(state.people));
   // Open mid-burn so the first frame already shows what the page does.
-  state.simDay = horizon() * 0.35;
-  setPlaying(!reduceMotion);
+  state.simDay = horizon() * (still !== null ? still : 0.35);
+  setPlaying(still === null && !reduceMotion);
   syncPresetButtons();
   updateText();
   requestAnimationFrame(frame);

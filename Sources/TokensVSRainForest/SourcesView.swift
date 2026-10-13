@@ -56,6 +56,14 @@ struct SourcesView: View {
                         + "Der Fit deckt nur Inputs bis 10 000 Tokens ab; längere Kontexte werden linear verlängert.")
                         .fixedSize(horizontal: false, vertical: true)
                 }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(GiveBack.title).font(.headline)
+                    Text(GiveBack.text + " Eine Spende macht verbrauchten Strom nicht rückgängig, hilft aber Wäldern "
+                        + "und Wildnis ganz real.")
+                        .fixedSize(horizontal: false, vertical: true)
+                    Link("planetwild.com (Empfehlungslink)", destination: GiveBack.planetWild)
+                }
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
