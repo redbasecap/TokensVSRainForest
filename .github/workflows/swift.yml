@@ -1,6 +1,5 @@
-# This workflow will build a Swift project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
-
+# Builds and tests every push and PR. Every push to main also publishes a release:
+# the next patch tag (v0.1.0 → v0.1.1 → …) with the universal app and CLI zips attached.
 name: Swift
 
 on:
@@ -8,15 +7,97 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: swift-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
-
     runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # tags are needed to compute the next version
+
+    - name: Toolchain
+      run: swift --version
+
     - name: Build
-      run: swift build -v
+      run: swift build
+
     - name: Run tests
-      run: swift test -v
+      run: swift test
+
+    - name: Next version
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] \
+           || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          last=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+          last=${last:-v0.0.0}
+          IFS=. read -r major minor patch <<< "${last#v}"
+          version="${major}.${minor}.$((patch + 1))"
+          echo "release=true" >> "$GITHUB_OUTPUT"
+        else
+          version="0.0.0-pr${{ github.event.pull_request.number }}"
+          echo "release=false" >> "$GITHUB_OUTPUT"
+        fi
+        echo "version=${version}" >> "$GITHUB_OUTPUT"
+        echo "Version: ${version} (last tag: ${last:-none})"
+
+    - name: Package universal app and CLI
+      run: VERSION="${{ steps.version.outputs.version }}" ./Scripts/release.sh
+
+    - name: Smoke-test packaged builds
+      run: |
+        set -euo pipefail
+        tmp=$(mktemp -d)
+        ditto -x -k dist/TokensVSRainForest-*-macOS-universal.zip "$tmp"
+        ditto -x -k dist/rainforest-cli-*-macOS-universal.zip "$tmp"
+        lipo "$tmp/TokensVSRainForest.app/Contents/MacOS/TokensVSRainForest" -verify_arch arm64 x86_64
+        codesign --verify --deep "$tmp/TokensVSRainForest.app"
+        test -f "$tmp/TokensVSRainForest.app/Contents/Resources/AppIcon.icns"
+        test -f "$tmp/TokensVSRainForest.app/Contents/Resources/simulation.html"
+        "$tmp"/rainforest-*/rainforest --sources | head -3
+        "$tmp"/rainforest-*/rainforest --days 7 --json
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TokensVSRainForest-${{ steps.version.outputs.version }}
+        path: dist/*
+
+    - name: Publish release
+      if: steps.version.outputs.release == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        version="${{ steps.version.outputs.version }}"
+        cat > notes.md <<NOTES
+        **Tokens vs. Regenwald ${version}**: niedliche Mac-App im Minecraft-Pixel-Stil, die zeigt, wie viel
+        Amazonas-Regenwald dem CO₂ deiner Claude-Code- und Codex-Tokens entspricht.
+
+        | Datei | Inhalt |
+        | --- | --- |
+        | \`TokensVSRainForest-${version}-macOS-universal.zip\` | die App (Apple Silicon + Intel, macOS 14+) |
+        | \`rainforest-cli-${version}-macOS-universal.zip\` | nur die Kommandozeile |
+        | \`SHA256SUMS.txt\` | Prüfsummen |
+
+        **Erster Start:** Die App ist ad-hoc signiert und nicht notarisiert. Rechtsklick → **Öffnen**, oder:
+        \`xattr -dr com.apple.quarantine /Applications/TokensVSRainForest.app\`
+
+        Methodik und Quellen: [docs/METHODOLOGY.md](https://github.com/${{ github.repository }}/blob/main/docs/METHODOLOGY.md)
+        NOTES
+        gh release create "v${version}" dist/*.zip dist/SHA256SUMS.txt \
+          --target "${{ github.sha }}" \
+          --title "TokensVSRainForest ${version}" \
+          --notes-file notes.md \
+          --generate-notes \
+          --latest
