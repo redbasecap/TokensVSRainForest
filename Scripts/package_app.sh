@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds TokensVSRainForest.app (menu bar only, ad-hoc signed) in the repo root.
+# Builds TokensVSRainForest.app (window + menu bar item, ad-hoc signed) in the repo root.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -21,7 +21,6 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>0.1.0</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
-  <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
 </dict>
 </plist>

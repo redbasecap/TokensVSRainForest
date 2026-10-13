@@ -8,10 +8,16 @@ struct TokensVSRainForestApp: App {
 
     init() {
         SnapshotExporter.runIfRequested()
-        NSApplication.shared.setActivationPolicy(.accessory)
+        // Regular app with Dock icon: on notched MacBooks the menu bar item can hide behind the notch.
+        NSApplication.shared.setActivationPolicy(.regular)
     }
 
     var body: some Scene {
+        Window("Tokens vs. Regenwald", id: "main") {
+            PopoverView(store: self.store)
+        }
+        .windowResizability(.contentSize)
+
         MenuBarExtra {
             PopoverView(store: self.store)
         } label: {
