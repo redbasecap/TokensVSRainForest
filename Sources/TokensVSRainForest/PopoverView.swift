@@ -143,6 +143,10 @@ struct PopoverView: View {
                 self.openWindow(id: "sources")
                 NSApp.activate(ignoringOtherApps: true)
             }
+            Button("Simulation im Browser") {
+                SimulationLauncher.open(store: self.store)
+            }
+            .help("Was wäre, wenn alle so viele Tokens verbrauchen wie du?")
             Spacer()
             Button {
                 Task { await self.store.refresh() }

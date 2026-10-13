@@ -1,3 +1,5 @@
+<img src="Resources/AppIcon.png" width="128" alt="App-Icon: Pixel-Baum mit kleiner Flamme" align="right">
+
 # 🌳🔥 TokensVSRainForest
 
 Eine kleine macOS-Menüleisten-App im Minecraft-Pixel-Stil: Je mehr Tokens du mit deinen
@@ -11,6 +13,17 @@ Claude-Code- und Codex-Abos verbrauchst, desto mehr süße Pixel-Regenwaldbäume
 <img src="docs/screenshots/4-tree-30blocks.png" width="300" alt="Baum, 30 Blöcke verbrannt">
 <img src="docs/screenshots/5-forest-5trees.png" width="300" alt="Wald, 5 Bäume verbrannt">
 </p>
+
+## Web-Simulation: Was wäre, wenn alle so viele Tokens verbrauchen wie du?
+
+`web/index.html` zeigt den ganzen Amazonas-Regenwald als Pixel-Karte (3,9 × 10¹¹ Bäume, ≈ 365 Gt CO₂). Ein Regler
+legt fest, wie viele Menschen so viel verbrauchen wie du: nur du, 1 Mio., alle 180 Mio. GitHub-Devs oder alle
+8,2 Mrd. Menschen. Das Feuer frisst sich dann vom „Bogen der Abholzung“ aus durch den Wald, im Vergleich zur echten
+Abholzung laut PRODES.
+
+* In der App: **„Simulation im Browser“** öffnet die Seite mit deinem echten 30-Tage-Durchschnitt.
+* Ohne App: `web/index.html` direkt öffnen (mit Beispielwert) oder `swift run rainforest --days 30 --json` für
+  die eigenen Werte nutzen.
 
 ## Was die App rechnet
 
@@ -56,6 +69,8 @@ swift run rainforest              # CLI: heute, mit allen Zwischenwerten
 swift run rainforest --days 30    # letzte 30 Tage
 swift run rainforest --all --global-grid
 swift run rainforest --sources    # alle Quellen
+swift run rainforest --days 30 --json   # Tagesdurchschnitt für die Web-Simulation
+swift Scripts/make_icon.swift Resources/AppIcon.png   # Icon neu zeichnen
 
 swift test                        # Methodik- und Parser-Tests
 ```

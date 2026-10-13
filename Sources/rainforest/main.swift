@@ -11,6 +11,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
       --all           alle lokalen Logs
       --global-grid   Welt-Strommix (Ember 2026) statt Rechenzentrums-Mix (Jegham et al. 2025)
       --sources       Quellen ausgeben
+      --json          Tagesdurchschnitt als JSON (für die Web-Simulation)
     """)
     exit(0)
 }
@@ -37,6 +38,15 @@ let grid: GridMix = arguments.contains("--global-grid") ? .globalAverage : .data
 let started = Date()
 let ledger = await UsageLoader().load(since: startDate)
 let startKey = startDate.map { DayKey(date: $0, calendar: calendar) }
+
+if arguments.contains("--json") {
+    let summary = UsageSummary(ledger: ledger, from: startKey, through: DayKey(date: Date(), calendar: calendar),
+                               grid: grid)
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    print(String(data: try encoder.encode(summary), encoding: .utf8) ?? "{}")
+    exit(0)
+}
 
 func format(_ value: Double, _ digits: Int = 2) -> String {
     String(format: "%.\(digits)f", value)

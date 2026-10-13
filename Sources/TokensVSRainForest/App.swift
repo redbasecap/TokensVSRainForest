@@ -4,6 +4,7 @@ import SwiftUI
 
 @main
 struct TokensVSRainForestApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = UsageStore()
 
     init() {
@@ -32,15 +33,35 @@ struct TokensVSRainForestApp: App {
     }
 }
 
+extension Notification.Name {
+    static let showMainWindow = Notification.Name("TokensVSRainForest.showMainWindow")
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { NotificationCenter.default.post(name: .showMainWindow, object: nil) }
+        return true
+    }
+}
+
 /// Tiny pixel tree in the menu bar; it catches fire once today's tokens cost anything.
+/// The label exists from launch on, so it also opens the main window (at launch and on Dock clicks).
 struct MenuBarLabel: View {
     let impact: Impact
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         HStack(spacing: 3) {
             Image(nsImage: MenuBarIcon.image(burning: self.impact.co2Kg > 0))
             Text(Format.co2(self.impact.co2Kg))
         }
+        .task { self.showMainWindow() }
+        .onReceive(NotificationCenter.default.publisher(for: .showMainWindow)) { _ in self.showMainWindow() }
+    }
+
+    private func showMainWindow() {
+        self.openWindow(id: "main")
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
 
