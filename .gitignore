@@ -3,3 +3,4 @@
 *.app
 *.zip
 .DS_Store
+dist/

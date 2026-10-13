@@ -89,14 +89,44 @@ Die ausführliche Herleitung mit allen Quellen, Tabellen und Grenzen steht in
 Keine Netzwerkanfragen, kein Schlüsselbund, keine Cookies. Nutzung über claude.ai, ChatGPT oder deren Apps steht
 nicht in diesen Logs und wird nicht gezählt.
 
-## Bauen und starten
+## Installieren
 
-Voraussetzungen: macOS 14+ und Swift 6.
+### Fertige App herunterladen
+
+1. Unter [Releases](https://github.com/redbasecap/TokensVSRainForest/releases/latest)
+   `TokensVSRainForest-<version>-macOS-universal.zip` laden. Die App läuft auf Apple Silicon und Intel, ab macOS 14.
+2. Entpacken und `TokensVSRainForest.app` nach `/Applications` ziehen.
+3. Die App ist nur ad-hoc signiert und nicht von Apple notarisiert. Deshalb blockiert macOS den ersten Start. So geht es
+   trotzdem:
+   * Rechtsklick auf die App, dann **Öffnen** und noch einmal **Öffnen** bestätigen, oder
+   * im Terminal: `xattr -dr com.apple.quarantine /Applications/TokensVSRainForest.app`
+
+### Nur die CLI
+
+`rainforest-cli-<version>-macOS-universal.zip` laden, entpacken, dann:
 
 ```bash
-./Scripts/package_app.sh          # baut TokensVSRainForest.app (ad-hoc signiert)
-open TokensVSRainForest.app
+xattr -d com.apple.quarantine rainforest-*/rainforest
+./rainforest-*/rainforest --days 30
+```
 
+Die Prüfsummen stehen jeweils in `SHA256SUMS.txt` am Release.
+
+### Selbst bauen
+
+Voraussetzungen: macOS 14+, Xcode bzw. Swift 6.
+
+```bash
+git clone https://github.com/redbasecap/TokensVSRainForest.git
+cd TokensVSRainForest
+./Scripts/package_app.sh && open TokensVSRainForest.app
+```
+
+Ein Release-Build (universal, mit ZIPs in `dist/`) entsteht mit `VERSION=0.1.0 ./Scripts/release.sh`.
+
+## Entwickeln
+
+```bash
 swift run rainforest              # CLI: heute, mit allen Zwischenwerten
 swift run rainforest --days 30    # letzte 30 Tage
 swift run rainforest --all --global-grid
