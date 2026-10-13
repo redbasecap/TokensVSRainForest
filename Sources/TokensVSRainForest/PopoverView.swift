@@ -49,6 +49,8 @@ struct PopoverView: View {
             self.headline(impact)
             self.stats(impact)
             self.providerRows
+            Divider()
+            LimitsSection(store: self.store)
             self.giveBack
             Divider()
             self.footer

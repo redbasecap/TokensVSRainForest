@@ -51,12 +51,33 @@ final class UsageStore {
         didSet { UserDefaults.standard.set(self.grid.rawValue, forKey: "grid") }
     }
 
+    private(set) var codexLimits: ProviderLimits?
+    private(set) var claudeLimits: ProviderLimits?
+    private(set) var claudeLimitsError: String?
+
+    /// Opt-in: reads the Claude Code login (Keychain) and asks api.anthropic.com. Off by default.
+    var claudeLimitsEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(self.claudeLimitsEnabled, forKey: "claudeLimitsEnabled")
+            if self.claudeLimitsEnabled {
+                Task { await self.refreshClaudeLimits() }
+            } else {
+                self.claudeLimits = nil
+                self.claudeLimitsError = nil
+                self.claudeCredentials = nil
+            }
+        }
+    }
+
+    @ObservationIgnored private var claudeCredentials: ClaudeCredentials?
+
     private let loader = UsageLoader()
     private var timer: Task<Void, Never>?
 
     init() {
         self.period = UserDefaults.standard.string(forKey: "period").flatMap(Period.init(rawValue:)) ?? .today
         self.grid = UserDefaults.standard.string(forKey: "grid").flatMap(GridMix.init(rawValue:)) ?? .datacenter
+        self.claudeLimitsEnabled = UserDefaults.standard.bool(forKey: "claudeLimitsEnabled")
         self.timer = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.refresh()
@@ -93,8 +114,28 @@ final class UsageStore {
             // Always cover at least 30 days so switching between short periods is instant.
             let wanted = self.period == .all ? nil : Period.month.startDate()
             self.ledger = await self.loader.load(since: wanted)
+            self.codexLimits = await self.loader.latestCodexLimits
             self.lastUpdated = Date()
         } while self.reloadPending
         self.isLoading = false
+        await self.refreshClaudeLimits()
+    }
+
+    func refreshClaudeLimits() async {
+        guard self.claudeLimitsEnabled else { return }
+        do {
+            // Keep the login in memory so the Keychain is read once, not on every refresh.
+            if self.claudeCredentials == nil || (self.claudeCredentials?.expiresAt ?? .distantFuture) <= Date() {
+                self.claudeCredentials = try await Task.detached { try ClaudeLimitsClient.loadCredentials() }.value
+            }
+            guard let credentials = self.claudeCredentials else { return }
+            self.claudeLimits = try await ClaudeLimitsClient.fetch(credentials: credentials)
+            self.claudeLimitsError = nil
+        } catch let error as ClaudeLimitsError {
+            if error == .unauthorized || error == .expired { self.claudeCredentials = nil }
+            self.claudeLimitsError = error.localizedDescription
+        } catch {
+            self.claudeLimitsError = error.localizedDescription
+        }
     }
 }

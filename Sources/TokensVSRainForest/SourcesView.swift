@@ -18,8 +18,10 @@ struct SourcesView: View {
                     number: 1,
                     title: "Tokens zählen (lokal)",
                     body: "Gelesen werden nur die Logdateien von Claude Code (~/.claude/projects) und Codex CLI "
-                        + "(~/.codex/sessions). Keine Netzwerkanfragen, kein Schlüsselbund. Nutzung im Browser oder "
-                        + "in den Chat-Apps (claude.ai, ChatGPT) steht nicht in diesen Logs und fehlt daher.",
+                        + "(~/.codex/sessions). Für die Rechnung gibt es keine Netzwerkanfragen und keinen Schlüsselbund. "
+                        + "Nur wenn du die Claude-Abo-Limits einschaltest, liest die App einmal deinen Claude-Code-Login "
+                        + "und fragt Anthropic. Nutzung im Browser oder in den Chat-Apps (claude.ai, ChatGPT) steht "
+                        + "nicht in diesen Logs und fehlt daher.",
                     sources: [Sources.codexBar])
 
                 self.step(

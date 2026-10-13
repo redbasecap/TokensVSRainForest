@@ -44,17 +44,33 @@ enum CodexLogParser {
         }
     }
 
+    struct ParseResult: Sendable {
+        var entries: [CodexUsageEntry] = []
+        /// Newest `rate_limits` snapshot in the file.
+        var limits: ProviderLimits?
+    }
+
     static func parse(data: Data, calendar: Calendar) -> [CodexUsageEntry] {
+        self.parseWithLimits(data: data, calendar: calendar).entries
+    }
+
+    static func parseWithLimits(data: Data, calendar: Calendar) -> ParseResult {
+        var result = ParseResult()
         var entries: [CodexUsageEntry] = []
         var previous: Totals?
         JSONL.forEachLine(in: data, containing: [#""token_count""#]) { line in
             guard let obj = JSONL.object(line),
                   let payload = obj["payload"] as? [String: Any],
                   payload["type"] as? String == "token_count",
-                  let info = payload["info"] as? [String: Any],
                   let timestampText = obj["timestamp"] as? String,
                   let timestamp = Timestamps.parse(timestampText)
             else { return }
+            if let limits = CodexLimitParser.limits(from: payload, observedAt: timestamp),
+               limits.observedAt >= (result.limits?.observedAt ?? .distantPast)
+            {
+                result.limits = limits
+            }
+            guard let info = payload["info"] as? [String: Any] else { return }
 
             let delta: Totals
             let signatureTotals: String
@@ -84,7 +100,8 @@ enum CodexLogParser {
                 day: DayKey(date: timestamp, calendar: calendar),
                 counts: delta.counts))
         }
-        return entries
+        result.entries = entries
+        return result
     }
 
     static func ledger(from files: [[CodexUsageEntry]]) -> [DayKey: TokenCounts] {

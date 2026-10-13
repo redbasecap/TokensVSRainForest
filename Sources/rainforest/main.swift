@@ -12,6 +12,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
       --global-grid   Welt-Strommix (Ember 2026) statt Rechenzentrums-Mix (Jegham et al. 2025)
       --sources       Quellen ausgeben
       --json          Tagesdurchschnitt als JSON (für die Web-Simulation)
+      --limits        Abo-Limits von Codex (aus den Logs); mit --claude auch Claude (Login + Netzwerk)
     """)
     exit(0)
 }
@@ -38,6 +39,32 @@ let grid: GridMix = arguments.contains("--global-grid") ? .globalAverage : .data
 let started = Date()
 let ledger = await UsageLoader().load(since: startDate)
 let startKey = startDate.map { DayKey(date: $0, calendar: calendar) }
+
+if arguments.contains("--limits") {
+    func show(_ limits: ProviderLimits) {
+        let age = Int(Date().timeIntervalSince(limits.observedAt) / 60)
+        print("\(limits.provider.displayName)\(limits.plan.map { " (\($0))" } ?? "") · Stand vor \(age) Min.")
+        for window in limits.windows.map({ $0.current() }) {
+            let reset = window.resetsAt.map { " · Reset \($0.formatted(date: .abbreviated, time: .shortened))" } ?? ""
+            print("  \(window.label.padding(toLength: 16, withPad: " ", startingAt: 0)) \(Int(window.usedPercent.rounded())) %\(reset)")
+        }
+    }
+    if let codex = await UsageLoader().latestCodexLimitsAfterLoad(since: Calendar.current.date(byAdding: .day, value: -7, to: Date())) {
+        show(codex)
+    } else {
+        print("Codex: keine Limits in den Logs der letzten 7 Tage gefunden.")
+    }
+    if arguments.contains("--claude") {
+        do {
+            show(try await ClaudeLimitsClient.fetch(credentials: ClaudeLimitsClient.loadCredentials()))
+        } catch {
+            print("Claude: \(error.localizedDescription)")
+        }
+    } else {
+        print("Claude: mit --limits --claude abrufen (liest den Claude-Code-Login, fragt api.anthropic.com).")
+    }
+    exit(0)
+}
 
 if arguments.contains("--json") {
     let summary = UsageSummary(ledger: ledger, from: startKey, through: DayKey(date: Date(), calendar: calendar),

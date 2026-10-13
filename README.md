@@ -89,6 +89,17 @@ Die ausführliche Herleitung mit allen Quellen, Tabellen und Grenzen steht in
 Keine Netzwerkanfragen, kein Schlüsselbund, keine Cookies. Nutzung über claude.ai, ChatGPT oder deren Apps steht
 nicht in diesen Logs und wird nicht gezählt.
 
+## Abo-Limits (wie in CodexBar)
+
+* **Codex:** Die Auslastung von 5-Stunden- und Wochenfenster, die Reset-Zeit und der Plan kommen direkt aus den
+  lokalen Codex-Logs. Es gibt keinen zusätzlichen Zugriff. Hat Codex länger nicht geschrieben, zeigt die App
+  „Stand vor …“.
+* **Claude Code (Opt-in, standardmäßig aus):** Nach Klick auf „Anzeigen“ liest die App einmal deinen Claude-Code-Login
+  (`~/.claude/.credentials.json` oder den Schlüsselbund-Eintrag „Claude Code-credentials“; macOS fragt dabei nach)
+  und fragt `api.anthropic.com/api/oauth/usage` ab. Der Login bleibt nur im Arbeitsspeicher. „Aus“ schaltet die
+  Abfrage wieder ab.
+* CLI: `rainforest --limits` (nur Codex) bzw. `rainforest --limits --claude`.
+
 ## Installieren
 
 ### Fertige App herunterladen
